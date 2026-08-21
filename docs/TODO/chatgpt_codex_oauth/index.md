@@ -30,3 +30,13 @@ This change will add an experimental, separately selectable provider. It will ke
 - The implementation follows the current Codex Device Flow: request a user code, open `https://auth.openai.com/codex/device`, poll for the short-lived authorization code, then exchange it with the server-provided PKCE verifier.
 - `access_token` and `refresh_token` are stored only in `EncryptedSharedPreferences` backed by Android Keystore. The `id_token` is used only to extract `chatgpt_account_id` and is not persisted.
 - `https://chatgpt.com/backend-api/wham/responses` and the Codex CLI client registration are non-public integration details. This provider is experimental and must not be presented as the public OpenAI API.
+
+## Manual validation
+
+1. Build and install the `app` debug variant, then add or edit a model configuration and select **ChatGPT Codex**.
+2. Leave the API-key field empty, select an available Codex model name, and choose **使用 ChatGPT 登录**.
+3. Confirm that the browser opens `auth.openai.com/codex/device`; complete sign-in with the intended ChatGPT account and enter the one-time code shown in Operit.
+4. Return to Operit and confirm that the status changes to **已登录** without displaying any token value.
+5. Send a streaming request, then a request that invokes an Operit tool. Verify that text deltas, reasoning, the function call, function output, and the final answer are delivered through the existing Responses pipeline.
+6. Wait until the access token is within the refresh window or revoke it in a test account, then send a request. Confirm that Operit refreshes once; an invalid refresh token must clear the login status and require a new sign-in.
+7. Treat 403 as an entitlement/model-permission error, 429 as quota/rate limiting, and 404 as model/backend availability. Do not attempt to bypass any of these server-side decisions.
