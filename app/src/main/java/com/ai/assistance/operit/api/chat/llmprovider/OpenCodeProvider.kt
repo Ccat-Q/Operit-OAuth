@@ -12,7 +12,6 @@ import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.stats.ProviderUsageSnapshot
-import com.ai.assistance.operit.data.stats.TokenStatCategory
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.util.ChatUtils
 import com.ai.assistance.operit.util.stream.Stream
@@ -62,7 +61,8 @@ class OpenCodeProvider private constructor(
         onUsageReported: (suspend (ProviderUsageSnapshot, attempt: Int) -> Unit)?,
         onNonFatalError: suspend (error: String) -> Unit,
         enableRetry: Boolean,
-        statsCategory: TokenStatCategory?
+        recordTokenUsage: Boolean,
+        onUsageFinalized: (suspend (attempt: Int?) -> Unit)?,
     ): Stream<String> {
         val qualityLevel =
             if (enableThinking) ApiPreferences.getInstance(context).thinkingQualityLevelFlow.first()
@@ -88,7 +88,8 @@ class OpenCodeProvider private constructor(
             onUsageReported = onUsageReported,
             onNonFatalError = onNonFatalError,
             enableRetry = enableRetry,
-            statsCategory = statsCategory
+            recordTokenUsage = recordTokenUsage,
+            onUsageFinalized = onUsageFinalized
         )
     }
 
