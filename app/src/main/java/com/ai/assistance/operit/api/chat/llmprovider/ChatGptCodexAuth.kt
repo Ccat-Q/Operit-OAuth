@@ -133,8 +133,11 @@ class ChatGptCodexAuth private constructor(context: Context) {
         return refreshAccessToken().accessToken
     }
 
-    suspend fun refreshAccessToken(): CodexCredentials = refreshMutex.withLock {
+    suspend fun refreshAccessToken(force: Boolean = false): CodexCredentials = refreshMutex.withLock {
         val current = getCredentials() ?: throw IllegalStateException("ChatGPT Codex login is required")
+        if (!force && current.expiresAt > System.currentTimeMillis() + ChatGptCodexOAuthConstants.EXPIRY_SKEW_MS) {
+            return current
+        }
         val refreshToken = current.refreshToken ?: run {
             logout()
             throw IllegalStateException("ChatGPT login expired")

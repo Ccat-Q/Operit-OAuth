@@ -33,7 +33,7 @@ class ChatGptCodexProvider(
     }
 
     override suspend fun refreshAuthenticationAfterUnauthorized(): Boolean = try {
-        ChatGptCodexAuth.getInstance(context).refreshAccessToken()
+        ChatGptCodexAuth.getInstance(context).refreshAccessToken(force = true)
         true
     } catch (_: Exception) {
         false
