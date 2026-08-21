@@ -213,7 +213,7 @@ open class OpenAIProvider(
     ) {
     }
 
-    protected open fun applyAuthenticationHeaders(
+    protected open suspend fun applyAuthenticationHeaders(
         builder: Request.Builder,
         currentApiKey: String
     ) {

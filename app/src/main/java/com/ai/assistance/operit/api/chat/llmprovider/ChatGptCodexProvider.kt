@@ -1,7 +1,6 @@
 package com.ai.assistance.operit.api.chat.llmprovider
 
 import android.content.Context
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -25,9 +24,9 @@ class ChatGptCodexProvider(
     supportsVideo = supportsVideo,
     enableToolCall = enableToolCall
 ) {
-    override fun applyAuthenticationHeaders(builder: Request.Builder, currentApiKey: String) {
+    override suspend fun applyAuthenticationHeaders(builder: Request.Builder, currentApiKey: String) {
         val auth = ChatGptCodexAuth.getInstance(context)
-        val accessToken = runBlocking { auth.getValidAccessToken() }
+        val accessToken = auth.getValidAccessToken()
         builder.header("Authorization", "Bearer $accessToken")
         auth.getCredentials()?.accountId?.takeIf(String::isNotBlank)?.let { builder.header("ChatGPT-Account-ID", it) }
     }
