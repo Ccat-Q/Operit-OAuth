@@ -361,6 +361,17 @@ object AIServiceFactory {
                     enableToolCall = enableToolCall
                 )
 
+            ApiProviderType.CHATGPT_CODEX ->
+                ChatGptCodexProvider(
+                    context = context,
+                    modelName = config.modelName,
+                    client = httpClient,
+                    supportsVision = supportsVision,
+                    supportsAudio = supportsAudio,
+                    supportsVideo = supportsVideo,
+                    enableToolCall = enableToolCall
+                )
+
             // Claude格式，支持Anthropic Claude系列
             ApiProviderType.ANTHROPIC,
             ApiProviderType.ANTHROPIC_GENERIC ->

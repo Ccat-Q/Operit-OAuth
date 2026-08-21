@@ -18,7 +18,7 @@ import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 
-class OpenAIResponsesProvider(
+open class OpenAIResponsesProvider(
     private val responsesApiEndpoint: String,
     apiKeyProvider: ApiKeyProvider,
     modelName: String,

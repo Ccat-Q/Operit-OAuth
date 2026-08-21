@@ -8,6 +8,7 @@ enum class ApiProviderType {
         OPENAI, // OpenAI (GPT系列)
         OPENAI_RESPONSES, // OpenAI Responses API
         OPENAI_RESPONSES_GENERIC, // OpenAI Responses通用（自定义端点）
+        CHATGPT_CODEX, // Experimental ChatGPT Codex OAuth
         OPENAI_GENERIC, // OpenAI通用（自定义端点）
         ANTHROPIC, // Anthropic (Claude系列)
         ANTHROPIC_GENERIC, // Anthropic通用（自定义端点）
