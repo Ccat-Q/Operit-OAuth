@@ -86,7 +86,7 @@ class ChatGptCodexAuth private constructor(context: Context) {
             }
             val body = JSONObject(it.body?.string().orEmpty())
             val deviceAuthId = body.requiredString("device_auth_id")
-            val userCode = body.optString("user_code").ifBlank { body.requiredString("usercode") }
+            val userCode = body.requiredString("user_code")
             val interval = body.optString("interval").toLongOrNull()
                 ?: throw IllegalStateException("ChatGPT device authorization returned an invalid poll interval")
             return CodexDeviceLoginChallenge(
@@ -152,13 +152,18 @@ class ChatGptCodexAuth private constructor(context: Context) {
             )
             response.use {
                 if (!it.isSuccessful) {
+                    val errorBody = it.body?.string().orEmpty()
+                    val errorCode = runCatching { JSONObject(errorBody).optString("error") }.getOrDefault("")
+                    if (errorCode == "invalid_grant") {
+                        logout()
+                        throw IllegalStateException("ChatGPT login expired")
+                    }
                     throw IllegalStateException("ChatGPT token refresh failed (${it.code})")
                 }
                 save(parseCredentials(JSONObject(it.body?.string().orEmpty())))
             }
         } catch (error: Exception) {
             AppLogger.w("ChatGptCodexAuth", "ChatGPT Codex token refresh failed", error)
-            logout()
             throw error
         }
     }

@@ -28,7 +28,7 @@ This change will add an experimental, separately selectable provider. It will ke
 ## Implementation notes
 
 - The implementation follows the current Codex Device Flow: request a user code, open `https://auth.openai.com/codex/device`, poll for the short-lived authorization code, then exchange it with the server-provided PKCE verifier.
-- `access_token` and `refresh_token` are stored only in `EncryptedSharedPreferences` backed by Android Keystore. The `id_token` is used only to extract `chatgpt_account_id` and is not persisted.
+- `access_token` and `refresh_token` are stored only in `EncryptedSharedPreferences` backed by Android Keystore. The `id_token` is used only to extract `chatgpt_account_id` and is not persisted. A refresh only clears the saved login state when OAuth explicitly reports `invalid_grant`; transient refresh failures leave the encrypted credentials intact.
 - `https://chatgpt.com/backend-api/wham/responses` and the Codex CLI client registration are non-public integration details. This provider is experimental and must not be presented as the public OpenAI API.
 
 ## Manual validation
