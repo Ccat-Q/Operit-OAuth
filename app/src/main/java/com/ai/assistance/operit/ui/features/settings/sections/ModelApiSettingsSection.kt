@@ -603,28 +603,32 @@ fun ModelApiSettingsSection(
                     )
                 }
 
-                val apiKeyInteractionSource = remember { MutableInteractionSource() }
-                val isApiKeyFocused by apiKeyInteractionSource.collectIsFocusedAsState()
+                if (selectedApiProvider == ApiProviderType.CHATGPT_CODEX) {
+                    ChatGptCodexLoginBlock()
+                } else {
+                    val apiKeyInteractionSource = remember { MutableInteractionSource() }
+                    val isApiKeyFocused by apiKeyInteractionSource.collectIsFocusedAsState()
 
-                SettingsTextField(
-                        title = stringResource(R.string.api_key),
-                        subtitle =
-                                if (isUsingDefaultApiKey)
-                                        stringResource(R.string.api_key_placeholder_default)
-                                else
-                                        stringResource(R.string.api_key_placeholder_custom),
-                        value = if (isUsingDefaultApiKey) "" else apiKeyInput,
-                        onValueChange = {
-                            val filteredInput = it.replace("\n", "").replace("\r", "").replace(" ", "")
-                            apiKeyInput = filteredInput
-                        },
-                        keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Next
-                        ),
-                        visualTransformation = if (isApiKeyFocused || apiKeyInput.isEmpty()) VisualTransformation.None else ApiKeyVisualTransformation(),
-                        interactionSource = apiKeyInteractionSource
-                )
+                    SettingsTextField(
+                            title = stringResource(R.string.api_key),
+                            subtitle =
+                                    if (isUsingDefaultApiKey)
+                                            stringResource(R.string.api_key_placeholder_default)
+                                    else
+                                            stringResource(R.string.api_key_placeholder_custom),
+                            value = if (isUsingDefaultApiKey) "" else apiKeyInput,
+                            onValueChange = {
+                                val filteredInput = it.replace("\n", "").replace("\r", "").replace(" ", "")
+                                apiKeyInput = filteredInput
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Next
+                            ),
+                            visualTransformation = if (isApiKeyFocused || apiKeyInput.isEmpty()) VisualTransformation.None else ApiKeyVisualTransformation(),
+                            interactionSource = apiKeyInteractionSource
+                    )
+                }
             }
             SettingsTextField(
                     title = stringResource(R.string.model_name),

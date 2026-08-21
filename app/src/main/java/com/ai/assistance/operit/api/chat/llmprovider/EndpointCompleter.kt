@@ -83,7 +83,8 @@ object EndpointCompleter {
 
         when (providerType) {
             ApiProviderType.OPENAI_RESPONSES,
-            ApiProviderType.OPENAI_RESPONSES_GENERIC -> {
+            ApiProviderType.OPENAI_RESPONSES_GENERIC,
+            ApiProviderType.CHATGPT_CODEX -> {
                 return completeResponsesEndpoint(endpoint)
             }
 

@@ -222,6 +222,9 @@ open class OpenAIProvider(
         }
     }
 
+    /** Gives OAuth-backed subclasses one guarded chance to refresh after a 401 response. */
+    protected open suspend fun refreshAuthenticationAfterUnauthorized(): Boolean = false
+
      override fun cancelStreaming() {
          isManuallyCancelled = true
          runCatching { activeResponse?.close() }
@@ -2527,6 +2530,7 @@ open class OpenAIProvider(
             val maxRetries = LlmRetryPolicy.MAX_RETRY_ATTEMPTS
             var retryCount = 0
             var lastException: Exception? = null
+            var didRetryAfterAuthenticationRefresh = false
 
             // 用于保存当前 attempt 已接收到的内容；一旦需要重试，会整体回滚到请求起点
             val receivedContent = StringBuilder()
@@ -2597,6 +2601,14 @@ open class OpenAIProvider(
 
                     try {
                         if (!response.isSuccessful) {
+                            if (
+                                response.code == 401 &&
+                                    !didRetryAfterAuthenticationRefresh &&
+                                    refreshAuthenticationAfterUnauthorized()
+                            ) {
+                                didRetryAfterAuthenticationRefresh = true
+                                throw AuthenticationRefreshRetryException()
+                            }
                             val errorBody =
                                 response.body?.string()
                                     ?: context.getString(R.string.openai_error_no_error_details)
@@ -2748,6 +2760,9 @@ open class OpenAIProvider(
                 )
                 return@stream
             } catch (e: Exception) {
+                if (e is AuthenticationRefreshRetryException) {
+                    continue
+                }
                 lastException = e
                 retryCount = handleRetryableError(
                     context = context,
@@ -2787,3 +2802,5 @@ open class OpenAIProvider(
         return responseStream.withEventChannel(eventChannel)
     }
 }
+
+private class AuthenticationRefreshRetryException : Exception()

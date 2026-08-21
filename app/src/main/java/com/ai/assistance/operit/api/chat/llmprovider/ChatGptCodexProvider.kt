@@ -31,4 +31,11 @@ class ChatGptCodexProvider(
         builder.header("Authorization", "Bearer $accessToken")
         auth.getCredentials()?.accountId?.takeIf(String::isNotBlank)?.let { builder.header("ChatGPT-Account-ID", it) }
     }
+
+    override suspend fun refreshAuthenticationAfterUnauthorized(): Boolean = try {
+        ChatGptCodexAuth.getInstance(context).refreshAccessToken()
+        true
+    } catch (_: Exception) {
+        false
+    }
 }
