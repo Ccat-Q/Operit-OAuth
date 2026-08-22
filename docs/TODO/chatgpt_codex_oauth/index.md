@@ -32,6 +32,7 @@ This change will add an experimental, separately selectable provider. It will ke
 - `access_token` and `refresh_token` are stored only in `EncryptedSharedPreferences` backed by Android Keystore. The `id_token` is used only to extract `chatgpt_account_id` and is not persisted. A refresh only clears the saved login state when OAuth explicitly reports `invalid_grant`; transient refresh failures leave the encrypted credentials intact.
 - The Codex model catalog is fetched from the authenticated `https://chatgpt.com/backend-api/codex/models?client_version=99.99.99` route and only exposes models the service marks as visible and API-supported. The same non-public Codex backend is used for Responses; this provider is experimental and must not be presented as the public OpenAI API.
 - Native Markdown session creation and incremental parsing run on `Dispatchers.Default`; the Compose main thread only consumes parsed stream groups. This prevents a native parser wait from blocking input dispatch and causing an ANR.
+- Codex Responses requests explicitly set `store: false`, as required by the backend. This setting is isolated to the experimental provider and does not change standard OpenAI Responses requests.
 
 ## Manual validation
 

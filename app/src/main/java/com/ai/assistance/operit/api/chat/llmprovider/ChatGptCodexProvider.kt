@@ -3,6 +3,8 @@ package com.ai.assistance.operit.api.chat.llmprovider
 import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
 
 /** Experimental provider for the non-public ChatGPT Codex Responses backend. */
 class ChatGptCodexProvider(
@@ -24,6 +26,16 @@ class ChatGptCodexProvider(
     supportsVideo = supportsVideo,
     enableToolCall = enableToolCall
 ) {
+    override fun customizeFinalRequestObject(
+        requestObject: JSONObject,
+        messagesArray: JSONArray,
+        toolsJson: String?
+    ) {
+        super.customizeFinalRequestObject(requestObject, messagesArray, toolsJson)
+        // The ChatGPT Codex backend rejects persisted Responses; this must remain provider-specific.
+        requestObject.put("store", false)
+    }
+
     override suspend fun applyAuthenticationHeaders(builder: Request.Builder, currentApiKey: String) {
         val auth = ChatGptCodexAuth.getInstance(context)
         val accessToken = auth.getValidAccessToken()
