@@ -26,6 +26,8 @@ class ChatGptCodexProvider(
     supportsVideo = supportsVideo,
     enableToolCall = enableToolCall
 ) {
+    override fun resolveStreamMode(requestedStream: Boolean): Boolean = true
+
     override fun customizeFinalRequestObject(
         requestObject: JSONObject,
         messagesArray: JSONArray,

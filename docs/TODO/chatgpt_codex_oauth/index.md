@@ -33,6 +33,7 @@ This change will add an experimental, separately selectable provider. It will ke
 - The Codex model catalog is fetched from the authenticated `https://chatgpt.com/backend-api/codex/models?client_version=99.99.99` route and only exposes models the service marks as visible and API-supported. The same non-public Codex backend is used for Responses; this provider is experimental and must not be presented as the public OpenAI API.
 - Native Markdown session creation and incremental parsing run on `Dispatchers.Default`; the Compose main thread only consumes parsed stream groups. This prevents a native parser wait from blocking input dispatch and causing an ANR.
 - Codex Responses requests explicitly set `store: false`, as required by the backend. This setting is isolated to the experimental provider and does not change standard OpenAI Responses requests.
+- Codex also requires `stream: true` for background Responses such as title generation and connection tests. `OpenAIProvider.resolveStreamMode` keeps the request flag and response parser aligned only for this provider.
 
 ## Manual validation
 

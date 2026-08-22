@@ -213,6 +213,9 @@ open class OpenAIProvider(
     ) {
     }
 
+    /** Allows provider-specific backends to require SSE while keeping request and response handling aligned. */
+    protected open fun resolveStreamMode(requestedStream: Boolean): Boolean = requestedStream
+
     protected open suspend fun applyAuthenticationHeaders(
         builder: Request.Builder,
         currentApiKey: String
@@ -2511,6 +2514,7 @@ open class OpenAIProvider(
         recordTokenUsage: Boolean,
         onUsageFinalized: (suspend (attempt: Int?) -> Unit)?,
     ): Stream<String> {
+        val effectiveStream = resolveStreamMode(stream)
         val eventChannel = MutableSharedStream<TextStreamEvent>(replay = Int.MAX_VALUE)
         val responseStream = stream {
             isManuallyCancelled = false
@@ -2562,7 +2566,7 @@ open class OpenAIProvider(
                     currentHistory,
                     modelParameters,
                     enableThinking,
-                    stream,
+                    effectiveStream,
                     availableTools,
                     preserveThinkInHistory
                 )
@@ -2573,7 +2577,7 @@ open class OpenAIProvider(
                 )
                 val attemptNumber = retryCount + 1
                 val requestTraceId = "llm_${attemptNumber}_${UUID.randomUUID().toString().substring(0, 8)}"
-                val request = createRequest(requestBody, requestTraceId, stream, attemptNumber)
+                val request = createRequest(requestBody, requestTraceId, effectiveStream, attemptNumber)
                 AppLogger.d(
                     "AIService",
                     "[req=$requestTraceId] 【发送消息】请求体构建完成，目标模型: $modelName，API端点: $apiEndpoint"
@@ -2634,7 +2638,7 @@ open class OpenAIProvider(
                         val responseBody = response.body ?: throw IOException(context.getString(R.string.openai_error_response_empty))
 
                         // 根据stream参数处理响应
-                        if (stream) {
+                        if (effectiveStream) {
                             AppLogger.d("AIService", "[req=$requestTraceId] 【发送消息】开始读取流式响应")
                             val reader = responseBody.charStream().buffered()
                             processStreamingResponse(
