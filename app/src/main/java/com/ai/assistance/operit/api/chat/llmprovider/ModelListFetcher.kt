@@ -198,6 +198,10 @@ object ModelListFetcher {
     ): Result<List<ModelOption>> {
         AppLogger.d(TAG, "开始获取模型列表: 端点=${sanitizeUrlForLog(apiEndpoint, apiKey)}, 提供商=${apiProviderType.name}")
 
+        if (apiProviderType == ApiProviderType.CHATGPT_CODEX) {
+            return getChatGptCodexModels(context)
+        }
+
         return withContext(Dispatchers.IO) {
             val maxRetries = 2
             var retryCount = 0
@@ -427,6 +431,88 @@ object ModelListFetcher {
             AppLogger.e(TAG, "超过最大重试次数，获取模型列表失败")
             Result.failure(lastException ?: IOException(context.getString(R.string.modellist_error_fetch_failed)))
         }
+    }
+
+    /**
+     * Fetches the authenticated Codex catalog rather than treating the ChatGPT backend as an
+     * OpenAI API-key endpoint. The endpoint is experimental and server-side entitlements remain
+     * authoritative, so only models declared visible and API-supported by the service are shown.
+     */
+    private suspend fun getChatGptCodexModels(context: Context): Result<List<ModelOption>> =
+            withContext(Dispatchers.IO) {
+                try {
+                    val auth = ChatGptCodexAuth.getInstance(context.applicationContext)
+
+                    fun buildRequest(accessToken: String): Request.Builder {
+                        val builder =
+                                Request.Builder()
+                                        .url(ChatGptCodexOAuthConstants.MODELS_URL)
+                                        .header("Authorization", "Bearer $accessToken")
+                                        .header("Content-Type", "application/json")
+                        auth.getCredentials()?.accountId?.takeIf(String::isNotBlank)?.let {
+                            builder.header("ChatGPT-Account-ID", it)
+                        }
+                        return builder
+                    }
+
+                    var response = client.newCall(buildRequest(auth.getValidAccessToken()).get().build()).execute()
+                    if (response.code == 401) {
+                        response.close()
+                        // Retry exactly once after the shared refresh mutex has obtained a fresh OAuth token.
+                        response =
+                                client.newCall(
+                                                buildRequest(auth.refreshAccessToken(force = true).accessToken)
+                                                        .get()
+                                                        .build()
+                                        )
+                                        .execute()
+                    }
+
+                    response.use {
+                        if (!it.isSuccessful) {
+                            return@withContext Result.failure(
+                                    IOException("ChatGPT Codex model catalog failed (${it.code})")
+                            )
+                        }
+                        val body = it.body?.string()
+                                ?: return@withContext Result.failure(
+                                        IOException(context.getString(R.string.model_fetch_response_empty))
+                                )
+                        Result.success(parseChatGptCodexModelResponse(context, body))
+                    }
+                } catch (error: Exception) {
+                    AppLogger.e(TAG, "ChatGPT Codex model catalog request failed", error)
+                    Result.failure(error)
+                }
+            }
+
+    private fun parseChatGptCodexModelResponse(
+            context: Context,
+            jsonResponse: String
+    ): List<ModelOption> {
+        val response = JSONObject(jsonResponse)
+        if (!response.has("models")) {
+            throw JSONException(context.getString(R.string.modellist_error_missing_data))
+        }
+
+        val models = response.getJSONArray("models")
+        return buildList {
+                    for (index in 0 until models.length()) {
+                        val model = models.getJSONObject(index)
+                        if (!model.optBoolean("supported_in_api", false) ||
+                                        model.optString("visibility") != "list"
+                        ) {
+                            continue
+                        }
+                        val slug = model.optString("slug").trim()
+                        if (slug.isEmpty()) {
+                            continue
+                        }
+                        val displayName = model.optString("display_name").trim().ifEmpty { slug }
+                        add(ModelOption(id = slug, name = displayName))
+                    }
+                }
+                .sortedBy { it.name }
     }
 
     /** 解析OpenAI格式的模型响应 格式: {"data": [{"id": "model-id", "object": "model", ...}, ...]} */

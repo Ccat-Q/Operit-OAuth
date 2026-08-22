@@ -31,7 +31,8 @@ internal object ChatGptCodexOAuthConstants {
     const val DEVICE_TOKEN_URL = "$ISSUER_URL/api/accounts/deviceauth/token"
     const val DEVICE_VERIFICATION_URL = "$ISSUER_URL/codex/device"
     const val DEVICE_REDIRECT_URI = "$ISSUER_URL/deviceauth/callback"
-    const val RESPONSES_URL = "https://chatgpt.com/backend-api/wham/responses"
+    const val RESPONSES_URL = "https://chatgpt.com/backend-api/codex/responses"
+    const val MODELS_URL = "https://chatgpt.com/backend-api/codex/models?client_version=99.99.99"
     const val EXPIRY_SKEW_MS = 60_000L
     const val DEVICE_LOGIN_TIMEOUT_MS = 15 * 60 * 1000L
 }

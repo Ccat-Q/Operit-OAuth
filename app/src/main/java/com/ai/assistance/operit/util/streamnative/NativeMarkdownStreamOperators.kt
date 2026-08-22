@@ -7,6 +7,7 @@ import com.ai.assistance.operit.util.stream.StreamGroup
 import com.ai.assistance.operit.util.stream.StreamLogger
 import com.ai.assistance.operit.util.stream.asStream
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -42,7 +43,8 @@ private fun Stream<Char>.nativeMarkdownSplitBySession(
             coroutineScope {
                 val groupChannel = Channel<StreamGroup<MarkdownProcessorType?>>(Channel.UNLIMITED)
 
-                launch {
+                // Native session creation and incremental parsing can block; never inherit Compose's UI dispatcher.
+                launch(Dispatchers.Default) {
                     val session = sessionFactory()
                     val fullContent = StringBuilder(initialContent)
                     val deltaBuffer = StringBuilder()
@@ -241,7 +243,8 @@ private fun Stream<String>.nativeMarkdownSplitBySessionString(
             coroutineScope {
                 val groupChannel = Channel<StreamGroup<MarkdownProcessorType?>>(Channel.UNLIMITED)
 
-                launch {
+                // Keep the String-stream variant off the UI dispatcher for the same native parser work.
+                launch(Dispatchers.Default) {
                     val session = sessionFactory()
                     val fullContent = StringBuilder(initialContent)
                     val deltaBuffer = StringBuilder()

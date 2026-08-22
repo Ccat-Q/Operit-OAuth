@@ -17,6 +17,7 @@ This change will add an experimental, separately selectable provider. It will ke
 4. Add secure OAuth credentials, the Codex Device Flow authorization-code exchange, refresh coordination, and one 401 refresh retry.
 5. Reuse the Responses provider for normal, streaming, reasoning, and tool-call requests; add only Codex-specific request and header differences.
 6. Compile and run focused tests/checks requested for this task.
+7. Fetch the authenticated Codex model catalog and keep native Markdown stream parsing off the UI thread.
 
 ## Completion criteria
 
@@ -29,7 +30,8 @@ This change will add an experimental, separately selectable provider. It will ke
 
 - The implementation follows the current Codex Device Flow: request a user code, open `https://auth.openai.com/codex/device`, poll for the short-lived authorization code, then exchange it with the server-provided PKCE verifier.
 - `access_token` and `refresh_token` are stored only in `EncryptedSharedPreferences` backed by Android Keystore. The `id_token` is used only to extract `chatgpt_account_id` and is not persisted. A refresh only clears the saved login state when OAuth explicitly reports `invalid_grant`; transient refresh failures leave the encrypted credentials intact.
-- `https://chatgpt.com/backend-api/wham/responses` and the Codex CLI client registration are non-public integration details. This provider is experimental and must not be presented as the public OpenAI API.
+- The Codex model catalog is fetched from the authenticated `https://chatgpt.com/backend-api/codex/models?client_version=99.99.99` route and only exposes models the service marks as visible and API-supported. The same non-public Codex backend is used for Responses; this provider is experimental and must not be presented as the public OpenAI API.
+- Native Markdown session creation and incremental parsing run on `Dispatchers.Default`; the Compose main thread only consumes parsed stream groups. This prevents a native parser wait from blocking input dispatch and causing an ANR.
 
 ## Manual validation
 

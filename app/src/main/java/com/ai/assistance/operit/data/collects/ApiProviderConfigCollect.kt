@@ -36,7 +36,7 @@ object ApiProviderConfigs {
         ProviderApiConfig(
             providerType = ApiProviderType.CHATGPT_CODEX,
             defaultModelName = "gpt-5.3-codex",
-            defaultApiEndpoint = "https://chatgpt.com/backend-api/wham/responses",
+            defaultApiEndpoint = "https://chatgpt.com/backend-api/codex/responses",
             requiresApiKey = false
         ),
         ProviderApiConfig(
